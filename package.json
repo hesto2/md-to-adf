@@ -1,6 +1,6 @@
 {
   "name": "@hesto2/md-to-adf",
-  "version": "0.0.0-semantically-released",
+  "version": "0.0.1",
   "description": "Translate Markdown (Github) into Atlassian Document Format (ADF)",
   "main": "dist/index.js",
   "scripts": {

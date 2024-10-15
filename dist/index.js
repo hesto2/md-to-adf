@@ -868,9 +868,21 @@ exports.document = document;
  * It also remove non-compatible hierarchy that ADF doesn't support
  *
  **********************************************************************************************************************/
-const { marks, Heading, Text, Emoji, BulletList, OrderedList, ListItem, CodeBlock, BlockQuote, Paragraph, Rule }	= __webpack_require__( 286 )
+const {
+  marks,
+  Heading,
+  Text,
+  Emoji,
+  BulletList,
+  OrderedList,
+  ListItem,
+  CodeBlock,
+  BlockQuote,
+  Paragraph,
+  Rule,
+} = __webpack_require__(286);
 
-const attachTextToNodeSliceEmphasis = __webpack_require__( 804 )
+const attachTextToNodeSliceEmphasis = __webpack_require__(804);
 
 // /**
 //  * @typedef { import("./markdownParsing").IRElement } IRElement
@@ -884,45 +896,62 @@ const attachTextToNodeSliceEmphasis = __webpack_require__( 804 )
  * @param currentParentNode					{Document}		ADF document to add to
  * @param currentArrayOfNodesOfSameIndent	{IRTreeNode}
  */
-function fillADFNodesWithMarkdown( currentParentNode, currentArrayOfNodesOfSameIndent ){
-	currentArrayOfNodesOfSameIndent.reduce( ( lastListNode, currentNode ) => {
-		const nodeOrListNode = lastListNode !== null
-							   && ( currentNode.node.adfType === 'orderedList' || currentNode.node.adfType === 'bulletList' )
-							   && lastListNode.content.type === currentNode.node.adfType
-							   ? lastListNode
-							   : addTypeToNode( currentParentNode, currentNode.node.adfType, currentNode.node.typeParam )
-		
-		const nodeOrListItem = currentNode.node.adfType === 'orderedList' || currentNode.node.adfType === 'bulletList'
-							   ? nodeOrListNode.content.add( new ListItem() )
-							   : nodeOrListNode
-		const nodeToAttachTextTo = currentNode.node.adfType === 'orderedList' || currentNode.node.adfType === 'bulletList' || currentNode.node.adfType === 'blockQuote'
-								   ? typeof currentNode.node.textToEmphasis !== 'undefined' || currentNode.children.length === 0
-									 ? nodeOrListItem.content.add( new Paragraph() )
-									 : nodeOrListItem
-								   : nodeOrListItem
-		
-		if( currentNode.node.adfType === 'divider' )
-			return lastListNode
-		
-		else if( currentNode.node.adfType !== 'codeBlock'
-				 && currentNode.node.textToEmphasis )
-			attachItemNode( nodeToAttachTextTo, currentNode.node.textToEmphasis )
-		
-		else if( currentNode.node.adfType !== 'codeBlock'
-				 && currentNode.node.textToEmphasis === '' )
-			attachItemNode( nodeToAttachTextTo, ' ' )
-		
-		else if( currentNode.node.adfType === 'codeBlock' )
-			attachTextToNodeRaw( nodeToAttachTextTo, currentNode.node.textToEmphasis )
-		
-		if( currentNode.children )
-			fillADFNodesWithMarkdown( nodeOrListItem, currentNode.children )
-		
-		return ( currentNode.node.adfType !== 'orderedList' && currentNode.node.adfType !== 'bulletList' )
-			   || ( !lastListNode || currentNode.node.adfType === lastListNode.content.type )
-			   ? nodeOrListNode
-			   : lastListNode
-	}, null )
+function fillADFNodesWithMarkdown(
+  currentParentNode,
+  currentArrayOfNodesOfSameIndent
+) {
+  currentArrayOfNodesOfSameIndent.reduce((lastListNode, currentNode) => {
+    const nodeOrListNode =
+      lastListNode !== null &&
+      (currentNode.node.adfType === "orderedList" ||
+        currentNode.node.adfType === "bulletList") &&
+      lastListNode.content.type === currentNode.node.adfType
+        ? lastListNode
+        : addTypeToNode(
+            currentParentNode,
+            currentNode.node.adfType,
+            currentNode.node.typeParam
+          );
+
+    const nodeOrListItem =
+      currentNode.node.adfType === "orderedList" ||
+      currentNode.node.adfType === "bulletList"
+        ? nodeOrListNode.content.add(new ListItem())
+        : nodeOrListNode;
+    const nodeToAttachTextTo =
+      currentNode.node.adfType === "orderedList" ||
+      currentNode.node.adfType === "bulletList" ||
+      currentNode.node.adfType === "blockQuote"
+        ? typeof currentNode.node.textToEmphasis !== "undefined" ||
+          currentNode.children.length === 0
+          ? nodeOrListItem.content.add(new Paragraph())
+          : nodeOrListItem
+        : nodeOrListItem;
+
+    if (currentNode.node.adfType === "divider") return lastListNode;
+    else if (
+      currentNode.node.adfType !== "codeBlock" &&
+      currentNode.node.textToEmphasis
+    )
+      attachItemNode(nodeToAttachTextTo, currentNode.node.textToEmphasis);
+    else if (
+      currentNode.node.adfType !== "codeBlock" &&
+      currentNode.node.textToEmphasis === ""
+    )
+      attachItemNode(nodeToAttachTextTo, " ");
+    else if (currentNode.node.adfType === "codeBlock")
+      attachTextToNodeRaw(nodeToAttachTextTo, currentNode.node.textToEmphasis);
+
+    if (currentNode.children)
+      fillADFNodesWithMarkdown(nodeOrListItem, currentNode.children);
+
+    return (currentNode.node.adfType !== "orderedList" &&
+      currentNode.node.adfType !== "bulletList") ||
+      !lastListNode ||
+      currentNode.node.adfType === lastListNode.content.type
+      ? nodeOrListNode
+      : lastListNode;
+  }, null);
 }
 
 /**
@@ -934,35 +963,35 @@ function fillADFNodesWithMarkdown( currentParentNode, currentArrayOfNodesOfSameI
  *
  * @returns 				{Node}		the node added
  */
-function addTypeToNode( adfNodeToAttachTo, adfType, typeParams ){
-	switch( adfType ) {
-		case "heading":
-			return adfNodeToAttachTo.content.add( new Heading( typeParams ) )
-		
-		case "divider":
-			return adfNodeToAttachTo.content.add( new Rule() )
-		
-		case "bulletList":
-			return adfNodeToAttachTo.content.add( new BulletList() )
-		
-		case "orderedList": {
-			const orderedListNode = new OrderedList( )
-			if( typeParams ) orderedListNode.attrs = { order: typeParams }
-			return adfNodeToAttachTo.content.add( orderedListNode )
-		}
-		
-		case "codeBlock":
-			return adfNodeToAttachTo.content.add( new CodeBlock( typeParams ) )
-		
-		case "blockQuote":
-			return adfNodeToAttachTo.content.add( new BlockQuote() )
-		
-		case "paragraph":
-			return adfNodeToAttachTo.content.add( new Paragraph() )
-		
-		default:
-			throw 'incompatible type'
-	}
+function addTypeToNode(adfNodeToAttachTo, adfType, typeParams) {
+  switch (adfType) {
+    case "heading":
+      return adfNodeToAttachTo.content.add(new Heading(typeParams));
+
+    case "divider":
+      return adfNodeToAttachTo.content.add(new Rule());
+
+    case "bulletList":
+      return adfNodeToAttachTo.content.add(new BulletList());
+
+    case "orderedList": {
+      const orderedListNode = new OrderedList();
+      if (typeParams) orderedListNode.attrs = { order: typeParams };
+      return adfNodeToAttachTo.content.add(orderedListNode);
+    }
+
+    case "codeBlock":
+      return adfNodeToAttachTo.content.add(new CodeBlock(typeParams));
+
+    case "blockQuote":
+      return adfNodeToAttachTo.content.add(new BlockQuote());
+
+    case "paragraph":
+      return adfNodeToAttachTo.content.add(new Paragraph());
+
+    default:
+      throw "incompatible type";
+  }
 }
 
 /**
@@ -971,63 +1000,76 @@ function addTypeToNode( adfNodeToAttachTo, adfType, typeParams ){
  * @param nodeToAttachTo		{Node}		ADF Node to attach to
  * @param rawText				{String}	text content of the node to add
  */
-function attachItemNode( nodeToAttachTo, rawText ) {
-	const slicedInline = sliceInLineCode( rawText )
-	
-	const { slicedInlineAndEmoji } = slicedInline.reduce( ( { slicedInlineAndEmoji }, currentSlice ) => {
-		if( !currentSlice.isMatching ){
-			const slicedEmoji = sliceEmoji( currentSlice.text )
-			
-			return { slicedInlineAndEmoji: slicedInlineAndEmoji.concat( slicedEmoji ) }
-		}
-		
-		slicedInlineAndEmoji.push( currentSlice )
-		return { slicedInlineAndEmoji }
-	}, { slicedInlineAndEmoji: [] } )
-	
-	const { slicedInlineAndEmojiAndLink } = slicedInlineAndEmoji.reduce( ( { slicedInlineAndEmojiAndLink }, currentSlice ) => {
-		if( !currentSlice.isMatching ){
-			const slicedLink = sliceLink( currentSlice.text )
-			
-			return { slicedInlineAndEmojiAndLink: slicedInlineAndEmojiAndLink.concat( slicedLink ) }
-		}
-		
-		slicedInlineAndEmojiAndLink.push( currentSlice )
-		return { slicedInlineAndEmojiAndLink }
-	}, { slicedInlineAndEmojiAndLink: [] } )
-	
-	for( const currentSlice of slicedInlineAndEmojiAndLink ) {
-		switch( currentSlice.type ){
-			case 'inline':
-				const inlineCodeNode = new Text( currentSlice.text, marks().code() )
-				nodeToAttachTo.content.add( inlineCodeNode )
-				break
-			
-			case 'emoji':
-				const emojiNode = new Emoji( {shortName: currentSlice.text } )
-				nodeToAttachTo.content.add( emojiNode )
-				break
-			
-			case 'link':
-				const linkNode = new Text( currentSlice.text,
-										   marks().link( currentSlice.optionalText1,
-														 currentSlice.optionalText2 ) )
-				nodeToAttachTo.content.add( linkNode )
-				break
-			
-			case 'image':
-				const imageNode = new Text( currentSlice.text,
-											marks().link( currentSlice.optionalText1,
-														  currentSlice.optionalText2 ) )
-				nodeToAttachTo.content.add( imageNode )
-				break
-			
-			default:
-				attachTextToNodeSliceEmphasis( nodeToAttachTo, currentSlice.text )
-			// const textNode = new Text( currentSlice.text, marksToUse )
-			// nodeToAttachTo.content.add( textNode )
-		}
-	}
+function attachItemNode(nodeToAttachTo, rawText) {
+  const slicedInline = sliceInLineCode(rawText);
+
+  const { slicedInlineAndEmoji } = slicedInline.reduce(
+    ({ slicedInlineAndEmoji }, currentSlice) => {
+      if (!currentSlice.isMatching) {
+        const slicedEmoji = sliceEmoji(currentSlice.text);
+
+        return {
+          slicedInlineAndEmoji: slicedInlineAndEmoji.concat(slicedEmoji),
+        };
+      }
+
+      slicedInlineAndEmoji.push(currentSlice);
+      return { slicedInlineAndEmoji };
+    },
+    { slicedInlineAndEmoji: [] }
+  );
+
+  const { slicedInlineAndEmojiAndLink } = slicedInlineAndEmoji.reduce(
+    ({ slicedInlineAndEmojiAndLink }, currentSlice) => {
+      if (!currentSlice.isMatching) {
+        const slicedLink = sliceLink(currentSlice.text);
+
+        return {
+          slicedInlineAndEmojiAndLink:
+            slicedInlineAndEmojiAndLink.concat(slicedLink),
+        };
+      }
+
+      slicedInlineAndEmojiAndLink.push(currentSlice);
+      return { slicedInlineAndEmojiAndLink };
+    },
+    { slicedInlineAndEmojiAndLink: [] }
+  );
+
+  for (const currentSlice of slicedInlineAndEmojiAndLink) {
+    switch (currentSlice.type) {
+      case "inline":
+        const inlineCodeNode = new Text(currentSlice.text, marks().code());
+        nodeToAttachTo.content.add(inlineCodeNode);
+        break;
+
+      case "emoji":
+        const emojiNode = new Emoji({ shortName: currentSlice.text });
+        nodeToAttachTo.content.add(emojiNode);
+        break;
+
+      case "link":
+        const linkNode = new Text(
+          currentSlice.text,
+          marks().link(currentSlice.optionalText1, currentSlice.optionalText2)
+        );
+        nodeToAttachTo.content.add(linkNode);
+        break;
+
+      case "image":
+        const imageNode = new Text(
+          currentSlice.text,
+          marks().link(currentSlice.optionalText1, currentSlice.optionalText2)
+        );
+        nodeToAttachTo.content.add(imageNode);
+        break;
+
+      default:
+        attachTextToNodeSliceEmphasis(nodeToAttachTo, currentSlice.text);
+      // const textNode = new Text( currentSlice.text, marksToUse )
+      // nodeToAttachTo.content.add( textNode )
+    }
+  }
 }
 
 /**
@@ -1037,8 +1079,12 @@ function attachItemNode( nodeToAttachTo, rawText ) {
  *
  * @returns 					{String[]}	the different slice matching an inline style
  */
-function sliceInLineCode( rawText ){
-	return sliceOneMatchFromRegexp( rawText, 'inline', /(?<nonMatchBefore>[^`]*)(?:`(?<match>[^`]+)`)(?<nonMatchAfter>[^`]*)/g )
+function sliceInLineCode(rawText) {
+  return sliceOneMatchFromRegexp(
+    rawText,
+    "inline",
+    /(?<nonMatchBefore>[^`]*)(?:`(?<match>[^`]+)`)(?<nonMatchAfter>[^`]*)/g
+  );
 }
 
 /**
@@ -1048,8 +1094,12 @@ function sliceInLineCode( rawText ){
  *
  * @returns 					{String[]}	the different slice matching an emoji style
  */
-function sliceEmoji( rawText ){
-	return sliceOneMatchFromRegexp( rawText, 'emoji',/(?<nonMatchBefore>[^`]*)(?::(?<match>[^`\s]+):)(?<nonMatchAfter>[^`]*)/g )
+function sliceEmoji(rawText) {
+  return sliceOneMatchFromRegexp(
+    rawText,
+    "emoji",
+    /(?<nonMatchBefore>[^`]*)(?::(?<match>[^`\s]+):)(?<nonMatchAfter>[^`]*)/g
+  );
 }
 
 /**
@@ -1059,8 +1109,12 @@ function sliceEmoji( rawText ){
  *
  * @returns 					{String[]}	the different slice matching a link style
  */
-function sliceLink( rawText ){
-	return sliceOneMatchFromRegexp( rawText, 'link',/(?<nonMatchBefore>[^`]*)(?:\[(?<match>[^\[\]]+)\]\((?<matchOptional>[^\(\)"]+)(?: "(?<matchOptional2>[^"]*)")?\))(?<nonMatchAfter>[^`]*)/g )
+function sliceLink(rawText) {
+  return sliceOneMatchFromRegexp(
+    rawText,
+    "link",
+    /(?<nonMatchBefore>[^`]*)(?:\[(?<match>[^\[\]]+)\]\((?<matchOptional>[^\(\)"]+)(?: "(?<matchOptional2>[^"]*)")?\))(?<nonMatchAfter>[^`]*)/g
+  );
 }
 
 /**
@@ -1072,36 +1126,42 @@ function sliceLink( rawText ){
  *
  * @returns 					{String[]}	the different slice matching the specified regexp
  */
-function sliceOneMatchFromRegexp( rawText, typeTag, regexpToSliceWith ){
-	let slicesResult = [ ]
-	let snippet = null
-	let hasAtLeastOneExpression = false
-	
-	while( ( snippet = regexpToSliceWith.exec( rawText ) ) ) {
-		hasAtLeastOneExpression = true
-		if( snippet.groups.nonMatchBefore ){
-			slicesResult.push( { isMatching: false, text: snippet.groups.nonMatchBefore } )
-		}
-		
-		if( snippet.groups.match ){
-			slicesResult.push( {
-								   isMatching: 		true,
-								   type: 			typeTag,
-								   text: 			snippet.groups.match,
-								   optionalText1: 	snippet.groups.matchOptional,
-								   optionalText2: 	snippet.groups.matchOptional2
-							   } )
-		}
-		
-		if( snippet.groups.nonMatchAfter ){
-			slicesResult.push( { isMatching: false, text: snippet.groups.nonMatchAfter } )
-		}
-	}
-	
-	if( !hasAtLeastOneExpression )
-		slicesResult.push( { isMatching: false, text: rawText } )
-	
-	return slicesResult
+function sliceOneMatchFromRegexp(rawText, typeTag, regexpToSliceWith) {
+  let slicesResult = [];
+  let snippet = null;
+  let hasAtLeastOneExpression = false;
+
+  while ((snippet = regexpToSliceWith.exec(rawText))) {
+    hasAtLeastOneExpression = true;
+    if (snippet.groups.nonMatchBefore) {
+      slicesResult.push({
+        isMatching: false,
+        text: snippet.groups.nonMatchBefore,
+      });
+    }
+
+    if (snippet.groups.match) {
+      slicesResult.push({
+        isMatching: true,
+        type: typeTag,
+        text: snippet.groups.match,
+        optionalText1: snippet.groups.matchOptional,
+        optionalText2: snippet.groups.matchOptional2,
+      });
+    }
+
+    if (snippet.groups.nonMatchAfter) {
+      slicesResult.push({
+        isMatching: false,
+        text: snippet.groups.nonMatchAfter,
+      });
+    }
+  }
+
+  if (!hasAtLeastOneExpression)
+    slicesResult.push({ isMatching: false, text: rawText });
+
+  return slicesResult;
 }
 
 /**
@@ -1110,12 +1170,12 @@ function sliceOneMatchFromRegexp( rawText, typeTag, regexpToSliceWith ){
  * @param nodeToAttachTo	{Node}		ADF node to attach to
  * @param textToAttach		{String}	text to use for the Text node
  */
-function attachTextToNodeRaw( nodeToAttachTo, textToAttach ){
-	const textNode = new Text( textToAttach )
-	nodeToAttachTo.content.add( textNode )
+function attachTextToNodeRaw(nodeToAttachTo, textToAttach) {
+  const textNode = new Text(textToAttach);
+  nodeToAttachTo.content.add(textNode);
 }
 
-module.exports = fillADFNodesWithMarkdown
+module.exports = fillADFNodesWithMarkdown;
 
 
 /***/ }),
