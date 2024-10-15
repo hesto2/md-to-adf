@@ -144,31 +144,30 @@ function addTypeToNode(adfNodeToAttachTo, adfType, typeParams) {
  */
 function attachItemNode(nodeToAttachTo, rawText) {
   const slicedInline = sliceInLineCode(rawText);
-
-  const { slicedInlineAndEmoji } = slicedInline.reduce(
-    ({ slicedInlineAndEmoji }, currentSlice) => {
-      if (!currentSlice.isMatching) {
-        const slicedEmoji = sliceEmoji(currentSlice.text);
-
-        return {
-          slicedInlineAndEmoji: slicedInlineAndEmoji.concat(slicedEmoji),
-        };
-      }
-
-      slicedInlineAndEmoji.push(currentSlice);
-      return { slicedInlineAndEmoji };
-    },
-    { slicedInlineAndEmoji: [] }
-  );
-
-  const { slicedInlineAndEmojiAndLink } = slicedInlineAndEmoji.reduce(
-    ({ slicedInlineAndEmojiAndLink }, currentSlice) => {
+  const { slicedInlineAndLink } = slicedInline.reduce(
+    ({ slicedInlineAndLink }, currentSlice) => {
       if (!currentSlice.isMatching) {
         const slicedLink = sliceLink(currentSlice.text);
 
         return {
+          slicedInlineAndLink: slicedInlineAndLink.concat(slicedLink),
+        };
+      }
+
+      slicedInlineAndLink.push(currentSlice);
+      return { slicedInlineAndLink };
+    },
+    { slicedInlineAndLink: [] }
+  );
+
+  const { slicedInlineAndEmojiAndLink } = slicedInlineAndLink.reduce(
+    ({ slicedInlineAndEmojiAndLink }, currentSlice) => {
+      if (!currentSlice.isMatching) {
+        const slicedEmoji = sliceEmoji(currentSlice.text);
+
+        return {
           slicedInlineAndEmojiAndLink:
-            slicedInlineAndEmojiAndLink.concat(slicedLink),
+            slicedInlineAndEmojiAndLink.concat(slicedEmoji),
         };
       }
 

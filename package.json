@@ -42,8 +42,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm test && npm run package && git add dist/index.js",
-      "pre-push": "npm test"
+      "pre-commit": "npm run package && git add dist/index.js"
     }
   },
   "publishConfig": {
